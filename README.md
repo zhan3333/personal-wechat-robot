@@ -8,5 +8,5 @@
 
 # 运行命令
 ```
-python jiandan_img.py
+python wechatRobot.py
 ```
