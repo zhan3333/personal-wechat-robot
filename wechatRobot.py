@@ -1,25 +1,22 @@
 import itchat
-import myImg
 import myConfig
-import TuLingRobot
-import re
 import random
-import Sql.dialog as dialog
+import jiandan_img
+import requests
+import os
 from itchat.content import *
 
 # 登陆微信
-itchat.auto_login(True, enableCmdQR=False)
+itchat.auto_login(True, enableCmdQR=True)
 
-isMeImgDirPath = 'E:/Pictures/is me/'
+Pic = jiandan_img.Page(jiandan_img.web_path['pic'])
+pic_total_page_num = Pic.get_total_page_num()
+Ooxx = jiandan_img.Page(jiandan_img.web_path['ooxx'])
+ooxx_total_page_num = Ooxx.get_total_page_num()
 
-returnXiaoHan = {
-    'default': '嘘，詹光还在睡觉，我是他的微信小管家。您可以发送以下消息，让我做出对应操作：\n'
-               '%s\n'
-               '%s'
-               % (
-                    '· 发一张詹光照片',
-                    '· 添加自定义消息'
-               )
+
+return_msg_dict = {
+    'default': '嘀嘀嘀'
 }
 
 configOption = {
@@ -70,69 +67,52 @@ def get_user_wechat_mark(name):
 def get_return_msg(text, from_user_name):
     # 根据消息内容，做出回复消息
     return_text = ''
-    if text.find('@q#') != -1 and text.find('@s#') != -1:
-        # 添加问答
-        q = re.search(r'@q#\S*?#', text)
-        s = re.search(r'@s#\S*?#', text)
-        if q is None or s is None:
-            pass
-        else:
-            qt = q.group()
-            st = s.group()
-            question = qt[3:qt.__len__()-1]
-            answer = st[3:st.__len__()-1]
-            print(question, answer)
-            if len(dialog.query_by_question_and_answer(question, answer)) != 0:
-                return_text = '问答已经存在了...'
-            else:
-                dialog.add(question, answer)
-                return_text = '添加问答成功:\n' \
-                              '问：%s\n' \
-                              '答: %s' % (question, answer)
-
     if return_text == '':
-        # 发送照片
-        if text == '发一张詹光照片':
-            return_text = '@%s@%s' % ('img', myImg.get_random_one_img_list(isMeImgDirPath))
-        elif text == '添加自定义消息':
-            itchat.send('请复制以下模板，并修改问题与答案', from_user_name)
-            return_text = '@q#问题#\n@s#答案#'
-
-    if return_text == '':
-        # 根据数据库数据做出回答
-        answer_list = dialog.query_by_text(text)
-        if len(answer_list) != 0:
-            return_text = answer_list[random.randint(0, len(answer_list)-1)].answer
-            print(return_text)  # 多条答案中随机取一条答案返回
-
-    if return_text == '':
-        # 图灵机器人问答
-        tu_ling_ret = TuLingRobot.query(text)
-        if 'text' in tu_ling_ret:
-            return_text = tu_ling_ret['text']
-        if 'url' in tu_ling_ret:
-            itchat.send(tu_ling_ret['url'], from_user_name)
-
+        if text == 'pic':
+            pic_path = get_rand_img_page('pic')
+            send_img_to_user(pic_path, from_user_name)  # 发送图片给用户
+            return
+        if text == 'ox':
+            pic_path = get_rand_img_page('ooxx')
+            send_img_to_user(pic_path, from_user_name)  # 发送图片给用户
+            return
     if return_text == '':
         # 给出系统默认回答
-        return_text = returnXiaoHan['default']
-
+        return_text = return_msg_dict['default']
     return return_text
 
-# 需要查询标识的微信账号或名称等
-wechatList = {
-    'zhannnnnnnn',
-    '筱涵',
-    '詹奕'
-}
-wechatAccount = {}
-for wechat_name in wechatList:
-    wechatAccount[wechat_name] = get_user_wechat_mark(wechat_name)
-returnUserList = {
-    wechatAccount['zhannnnnnnn'],
-    wechatAccount['筱涵'],
-    wechatAccount['詹奕']
-}
+
+def get_pic_url_file_name(full_url: str):
+    # 获取url对应的文件名
+    return os.path.basename(full_url)
+
+
+def get_rand_img_page(pic_type):
+    if pic_type == 'pic':
+        rand_page = random.randint(1, pic_total_page_num)
+        Pic.set_page(rand_page)
+        img_page_dict = Pic.get_img_path_dict()
+        rand_img_path = img_page_dict[random.randint(0, img_page_dict.__len__()-1)]
+    else:
+        rand_page = random.randint(1, ooxx_total_page_num)
+        Ooxx.set_page(rand_page)
+        img_page_dict = Ooxx.get_img_path_dict()
+        rand_img_path = img_page_dict[random.randint(0, img_page_dict.__len__() - 1)]
+    return rand_img_path
+
+
+def send_img_to_user(pic_path, from_user_name):
+    file_name = get_pic_url_file_name(pic_path)
+    file_save_path = './img/' + file_name
+    f = open(file_save_path, 'wb')
+    f.write(requests.get('http:' + pic_path).content)
+    f.close()
+    print('download ' + file_name + ' success')
+    itchat.send_image(file_save_path, from_user_name)
+    print('send ' + file_name + ' success')
+    os.remove(file_save_path)
+    print('remove ' + file_name + ' success')
+    return True
 
 # 注册事件
 
@@ -154,8 +134,7 @@ def text_reply(msg):
 
     if not auto_reply:
         return
-    if from_user_name in returnUserList:
-        return get_return_msg(text, from_user_name)
+    return get_return_msg(text, from_user_name)
 
 
 @itchat.msg_register(FRIENDS)
