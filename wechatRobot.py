@@ -7,7 +7,7 @@ import os
 from itchat.content import *
 
 # 登陆微信
-itchat.auto_login(True, enableCmdQR=True)
+itchat.auto_login(True, enableCmdQR=2)
 
 Pic = jiandan_img.Page(jiandan_img.web_path['pic'])
 pic_total_page_num = Pic.get_total_page_num()
@@ -16,7 +16,13 @@ ooxx_total_page_num = Ooxx.get_total_page_num()
 
 
 return_msg_dict = {
-    'default': '嘀嘀嘀'
+    'default': '回复对应选项：\n'
+               '%s\n'
+               '%s'
+               % (
+                    '· ox 获取一张妹纸图',
+                    '· pic 获取一张无聊图'
+               )
 }
 
 configOption = {
