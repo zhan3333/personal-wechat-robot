@@ -130,6 +130,7 @@ def text_reply(msg):
     auto_reply = AutoReply.is_open_auto_reply()          # 是否开启了自动回复
     from_user_name = msg['FromUserName']                  # 发送者标识
     to_user_name = msg['ToUserName']                    # 接收者标识
+    msg_type = msg['MsgType']
     text = msg['Text']                                  # 发送者发送的消息
     print('test', msg)
     print('from user:', from_user_name)
@@ -139,6 +140,8 @@ def text_reply(msg):
         return
 
     if not auto_reply:
+        return
+    if msg_type == 10000:
         return
     return get_return_msg(text, from_user_name)
 
