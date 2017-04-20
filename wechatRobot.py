@@ -70,6 +70,9 @@ def get_user_wechat_mark(name):
 def get_return_msg(text, from_user_name):
     # 根据消息内容，做出回复消息
     return_text = ''
+    if not isinstance(text, str):
+        text = ''
+        return_text = '不认识图片'
     if text.find('@q#') != -1 and text.find('@s#') != -1:
         # 添加问答
         q = re.search(r'@q#\S*?#', text)
@@ -122,22 +125,23 @@ def get_return_msg(text, from_user_name):
 # 需要查询标识的微信账号或名称等
 wechatList = {
     'zhannnnnnnn',
-    '筱涵',
-    '詹奕'
+    '小乖乖',
+    '詹奕',
+    '漫天飞雪'
 }
 wechatAccount = {}
 for wechat_name in wechatList:
     wechatAccount[wechat_name] = get_user_wechat_mark(wechat_name)
 returnUserList = {
     wechatAccount['zhannnnnnnn'],
-    wechatAccount['筱涵'],
+    wechatAccount['小乖乖'],
     wechatAccount['詹奕']
 }
 
 # 注册事件
 
 
-@itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING])
+@itchat.msg_register([TEXT, MAP, CARD, NOTE, SHARING, 'Picture'])
 def text_reply(msg):
     # 文本内容回复
     print('-------start-------')
