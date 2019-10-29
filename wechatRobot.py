@@ -1,10 +1,9 @@
+# coding=utf-8
+
 import itchat
 import myImg
-import myConfig
-import TuLingRobot
 import re
 import random
-import Sql.dialog as dialog
 from itchat.content import *
 
 # 登陆微信
@@ -33,25 +32,21 @@ configOption = {
     % ('开启自动回复', '关闭自动回复', '查看自动回复状态')
 }
 
-AutoReply = myConfig.AutoReply()
 
 
 def config_set(text):
     # 设置操作
     if text == '1':
-        AutoReply.open()
         return '开启自动回复成功'
     if text == '2':
-        AutoReply.close()
         return '关闭自动回复成功'
     if text == '3':
-        status = AutoReply.is_open_auto_reply()
         if status:
             return '自动回复：开'
         else:
             return '自动回复：关'
     if text == '0':
-        return configOption[0]
+        return 0
     return text
 
 
@@ -85,13 +80,13 @@ def get_return_msg(text, from_user_name):
             question = qt[3:qt.__len__()-1]
             answer = st[3:st.__len__()-1]
             print(question, answer)
-            if len(dialog.query_by_question_and_answer(question, answer)) != 0:
-                return_text = '问答已经存在了...'
-            else:
-                dialog.add(question, answer)
-                return_text = '添加问答成功:\n' \
-                              '问：%s\n' \
-                              '答: %s' % (question, answer)
+            # if len(dialog.query_by_question_and_answer(question, answer)) != 0:
+            #     return_text = '问答已经存在了...'
+            # else:
+            #     dialog.add(question, answer)
+            #     return_text = '添加问答成功:\n' \
+            #                   '问：%s\n' \
+            #                   '答: %s' % (question, answer)
 
     if return_text == '':
         # 发送照片
@@ -108,13 +103,13 @@ def get_return_msg(text, from_user_name):
             return_text = answer_list[random.randint(0, len(answer_list)-1)].answer
             print(return_text)  # 多条答案中随机取一条答案返回
 
-    if return_text == '':
-        # 图灵机器人问答
-        tu_ling_ret = TuLingRobot.query(text)
-        if 'text' in tu_ling_ret:
-            return_text = tu_ling_ret['text']
-        if 'url' in tu_ling_ret:
-            itchat.send(tu_ling_ret['url'], from_user_name)
+    # if return_text == '':
+    #     # 图灵机器人问答
+    #     tu_ling_ret = TuLingRobot.query(text)
+    #     if 'text' in tu_ling_ret:
+    #         return_text = tu_ling_ret['text']
+    #     if 'url' in tu_ling_ret:
+    #         itchat.send(tu_ling_ret['url'], from_user_name)
 
     if return_text == '':
         # 给出系统默认回答
@@ -145,7 +140,7 @@ returnUserList = {
 def text_reply(msg):
     # 文本内容回复
     print('-------start-------')
-    auto_reply = AutoReply.is_open_auto_reply()          # 是否开启了自动回复
+    auto_reply = True          # 是否开启了自动回复
     from_user_name = msg['FromUserName']                  # 发送者标识
     to_user_name = msg['ToUserName']                    # 接收者标识
     text = msg['Text']                                  # 发送者发送的消息
